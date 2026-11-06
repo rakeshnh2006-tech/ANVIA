@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Sparkles, ChevronRight, ChevronLeft, Check } from 'lucide-react'
+import { ChevronRight, ChevronLeft, Check, Sparkles } from 'lucide-react'
+import AnviaLogo from '../components/ui/AnviaLogo'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/ui/Toast'
@@ -82,11 +83,8 @@ export default function Onboarding() {
     <div className="min-h-screen bg-sakhi-bg flex flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-lg">
         {/* Brand */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-lavender-500 to-purple-600 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-xl text-sakhi-text">SAKHI</span>
+        <div className="flex justify-center mb-8">
+          <AnviaLogo size="sm" />
         </div>
 
         {/* Progress */}
@@ -116,14 +114,14 @@ export default function Onboarding() {
                 <div className="w-16 h-16 rounded-3xl bg-lavender-100 flex items-center justify-center mx-auto mb-5">
                   <Sparkles className="w-8 h-8 text-lavender-600" />
                 </div>
-                <h2 className="text-2xl font-bold text-sakhi-text mb-3">Welcome to SAKHI</h2>
+                <h2 className="text-2xl font-bold text-sakhi-text mb-3">Welcome to ANVIA</h2>
                 <p className="text-sakhi-muted mb-4">
                   Let's set up your profile so we can personalize your experience.
                   All questions are optional — you can skip this anytime.
                 </p>
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-left mb-6">
                   <p className="text-xs text-amber-700">
-                    <strong>Important:</strong> SAKHI provides educational health information only.
+                    <strong>Important:</strong> ANVIA provides educational health information only.
                     It does not diagnose medical conditions. Always consult a healthcare professional for personal medical advice.
                   </p>
                 </div>
@@ -160,7 +158,7 @@ export default function Onboarding() {
               <div className="space-y-5">
                 <h2 className="text-xl font-bold text-sakhi-text">Your health preferences</h2>
                 <p className="text-sm text-sakhi-muted">
-                  These help personalize SAKHI. You are never required to disclose medical history.
+                  These help personalize ANVIA. You are never required to disclose medical history.
                 </p>
                 <div className="space-y-3">
                   <label className="flex items-start gap-3 cursor-pointer p-3 rounded-xl border border-sakhi-border hover:bg-lavender-50 transition-colors">
@@ -204,7 +202,7 @@ export default function Onboarding() {
                     className="mt-0.5 accent-lavender-600"
                   />
                   <p className="text-sm text-sakhi-text">
-                    I understand that SAKHI provides educational information only and does not diagnose medical conditions.
+                    I understand that ANVIA provides educational information only and does not diagnose medical conditions.
                     I consent to my symptom descriptions being processed by an external AI service.
                   </p>
                 </label>

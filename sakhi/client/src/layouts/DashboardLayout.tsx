@@ -2,8 +2,9 @@ import React, { useState } from 'react'
 import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom'
 import {
   LayoutDashboard, MessageCircleHeart, BookOpen, CalendarDays,
-  NotebookPen, BarChart3, FileText, UserCircle, LogOut, Menu, Sparkles
+  NotebookPen, BarChart3, FileText, UserCircle, LogOut, Menu
 } from 'lucide-react'
+import AnviaLogo from '../components/ui/AnviaLogo'
 import { AnimatePresence } from 'framer-motion'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/ui/Toast'
@@ -34,11 +35,8 @@ function SidebarContent({ displayName, userEmail, onSignOut, onNavClick }: Sideb
     <div className="flex flex-col h-full">
       {/* Brand */}
       <div className="px-4 py-5 border-b border-sakhi-border">
-        <Link to="/dashboard" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-lavender-500 to-purple-600 flex items-center justify-center">
-            <Sparkles className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-bold text-lg tracking-tight text-sakhi-text">SAKHI</span>
+        <Link to="/dashboard">
+          <AnviaLogo size="sm" />
         </Link>
       </div>
 
@@ -135,12 +133,7 @@ export default function DashboardLayout() {
           <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg hover:bg-gray-100">
             <Menu size={20} />
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-lavender-500 to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-3 h-3 text-white" />
-            </div>
-            <span className="font-bold text-sakhi-text">SAKHI</span>
-          </div>
+          <AnviaLogo size="sm" />
           <div className="w-8" />
         </header>
 

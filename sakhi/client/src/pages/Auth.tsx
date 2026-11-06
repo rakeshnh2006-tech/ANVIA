@@ -3,7 +3,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Sparkles, Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
+import AnviaLogo from '../components/ui/AnviaLogo'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/ui/Toast'
 
@@ -77,15 +78,11 @@ export default function AuthPage() {
       {/* Left panel */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-lavender-600 to-purple-700 items-center justify-center p-12">
         <div className="text-white text-center max-w-sm">
-          <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center mx-auto mb-6">
-            <Sparkles className="w-8 h-8 text-white" />
+          <div className="mb-6 flex justify-center">
+            <AnviaLogo size="lg" className="[&_span]:text-white [&_p]:text-lavender-100" />
           </div>
-          <h2 className="text-3xl font-bold mb-4">SAKHI</h2>
-          <p className="text-lavender-100 text-lg leading-relaxed mb-8">
-            Your Health. Your Language. Your Understanding.
-          </p>
-          <p className="text-lavender-200 text-sm leading-relaxed">
-            AI-powered women's health education platform with multilingual support for PCOS guidance, 
+          <p className="text-lavender-200 text-sm leading-relaxed mt-4">
+            AI-powered women's health education platform for PCOS guidance,
             cycle tracking and symptom understanding.
           </p>
         </div>
@@ -101,7 +98,7 @@ export default function AuthPage() {
           {mode === 'login' && (
             <>
               <h1 className="text-2xl font-bold text-sakhi-text mb-1">Welcome back</h1>
-              <p className="text-sm text-sakhi-muted mb-6">Sign in to your SAKHI account</p>
+              <p className="text-sm text-sakhi-muted mb-6">Sign in to your ANVIA account</p>
               <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-4">
                 <div>
                   <label className="label">Email address</label>
@@ -163,7 +160,7 @@ export default function AuthPage() {
           {mode === 'signup' && (
             <>
               <h1 className="text-2xl font-bold text-sakhi-text mb-1">Create your account</h1>
-              <p className="text-sm text-sakhi-muted mb-6">Join SAKHI — free, private and secure</p>
+              <p className="text-sm text-sakhi-muted mb-6">Join ANVIA — free, private and secure</p>
               <form onSubmit={signupForm.handleSubmit(handleSignup)} className="space-y-4">
                 <div>
                   <label className="label">Email address</label>
@@ -222,7 +219,7 @@ export default function AuthPage() {
                   )}
                 </div>
                 <p className="text-xs text-sakhi-muted">
-                  By creating an account, you agree that SAKHI is an educational platform and does not provide medical diagnosis.
+                  By creating an account, you agree that ANVIA is an educational platform and does not provide medical diagnosis.
                 </p>
                 <button type="submit" className="btn-primary w-full" disabled={signupForm.formState.isSubmitting}>
                   {signupForm.formState.isSubmitting ? 'Creating account…' : 'Create account'}

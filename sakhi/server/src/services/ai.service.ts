@@ -19,7 +19,7 @@ export interface AIServiceInput {
   safetyLevel: 'safe' | 'prompt' | 'urgent'
 }
 
-const SYSTEM_PROMPT = `You are SAKHI, an educational women's health assistant specializing in PCOS guidance.
+const SYSTEM_PROMPT = `You are ANVIA, an educational women's health assistant specializing in PCOS guidance.
 
 CRITICAL RULES:
 1. You provide educational health information ONLY. You NEVER diagnose medical conditions.

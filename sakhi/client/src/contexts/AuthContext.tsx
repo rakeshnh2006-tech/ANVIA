@@ -40,7 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .eq('id', userId)
       .maybeSingle()
     if (error) {
-      console.error('[SAKHI] fetchProfile error:', error.message)
+      console.error('[ANVIA] fetchProfile error:', error.message)
       // Leave profile as null — ProtectedRoute handles the null case safely
       return
     }

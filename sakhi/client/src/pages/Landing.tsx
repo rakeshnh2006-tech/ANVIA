@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Sparkles, ArrowRight, Shield, Heart, BookOpen,
+  ArrowRight, Shield, Heart, BookOpen,
   CalendarDays, FileText, ChevronDown, CheckCircle
 } from 'lucide-react'
+import AnviaLogo from '../components/ui/AnviaLogo'
 
 const features = [
   {
-    icon: <Sparkles className="w-5 h-5" />,
+    icon: <Heart className="w-5 h-5" />,
     title: 'AI Symptom Understanding',
     desc: 'Describe symptoms naturally. Our AI explains possible health associations in clear, simple language.'
   },
@@ -58,8 +59,8 @@ const howItWorks = [
 
 const faqs = [
   {
-    q: 'Does SAKHI diagnose medical conditions?',
-    a: 'No. SAKHI is an educational platform. It provides health information and guidance for navigating care, but does not diagnose any medical condition including PCOS.'
+    q: 'Does ANVIA diagnose medical conditions?',
+    a: 'No. ANVIA is an educational platform. It provides health information and guidance for navigating care, but does not diagnose any medical condition including PCOS.'
   },
   {
     q: 'Is my health information private?',
@@ -67,7 +68,7 @@ const faqs = [
   },
   {
     q: 'What should I do in an emergency?',
-    a: 'Call 112 (India\'s emergency number) or go to your nearest emergency facility immediately. SAKHI is not for emergencies.'
+    a: 'Call 112 (India\'s emergency number) or go to your nearest emergency facility immediately. ANVIA is not for emergencies.'
   },
 ]
 
@@ -98,12 +99,7 @@ export default function Landing() {
       {/* Navbar */}
       <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-sakhi-border">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-lavender-500 to-purple-600 flex items-center justify-center">
-              <Sparkles className="w-3.5 h-3.5 text-white" />
-            </div>
-            <span className="font-bold text-sakhi-text text-lg">SAKHI</span>
-          </div>
+          <AnviaLogo size="sm" />
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <a href="#features" className="text-sakhi-muted hover:text-sakhi-text transition-colors">Features</a>
             <a href="#how-it-works" className="text-sakhi-muted hover:text-sakhi-text transition-colors">How it works</a>
@@ -122,7 +118,6 @@ export default function Landing() {
         <div className="absolute inset-0 bg-gradient-to-b from-lavender-50/60 to-transparent pointer-events-none" />
         <div className="max-w-4xl mx-auto text-center relative">
           <div className="inline-flex items-center gap-2 bg-lavender-100 text-lavender-700 px-3.5 py-1.5 rounded-full text-xs font-medium mb-6">
-            <Sparkles className="w-3.5 h-3.5" />
             AI-Powered Women's Health Platform
           </div>
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-sakhi-text leading-tight mb-6">
@@ -131,7 +126,7 @@ export default function Landing() {
             <span className="text-gradient">Take Informed Steps.</span>
           </h1>
           <p className="text-lg text-sakhi-muted max-w-2xl mx-auto mb-8 leading-relaxed">
-            SAKHI helps you describe your health symptoms in your own words,
+            ANVIA helps you describe your health symptoms in your own words,
             understand possible associations, track your cycle, and prepare for conversations
             with your healthcare provider.
           </p>
@@ -150,7 +145,7 @@ export default function Landing() {
       {/* Disclaimer banner */}
       <section className="bg-amber-50 border-y border-amber-200 py-3 px-4">
         <p className="max-w-4xl mx-auto text-center text-xs text-amber-700">
-          <strong>Important:</strong> SAKHI is an educational health information platform, not a medical diagnosis service.
+          <strong>Important:</strong> ANVIA is an educational health information platform, not a medical diagnosis service.
           Always consult a qualified healthcare professional for personal medical advice.
         </p>
       </section>
@@ -161,7 +156,7 @@ export default function Landing() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-sakhi-text mb-3">Everything you need to understand your health</h2>
             <p className="text-sakhi-muted max-w-xl mx-auto">
-              SAKHI combines AI-powered symptom education and personal health tracking in one secure platform.
+              ANVIA combines AI-powered symptom education and personal health tracking in one secure platform.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -182,7 +177,7 @@ export default function Landing() {
       <section id="how-it-works" className="py-20 px-4 bg-lavender-50/40">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-sakhi-text mb-3">How SAKHI works</h2>
+            <h2 className="text-3xl font-bold text-sakhi-text mb-3">How ANVIA works</h2>
             <p className="text-sakhi-muted">Simple steps to better understanding your health.</p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -210,7 +205,7 @@ export default function Landing() {
               <div>
                 <h2 className="text-2xl font-bold text-sakhi-text mb-3">Your privacy is our priority</h2>
                 <p className="text-sakhi-muted mb-4">
-                  Health information is sensitive. SAKHI stores all data with end-to-end Row Level Security,
+                  Health information is sensitive. ANVIA stores all data with end-to-end Row Level Security,
                   ensuring only you can access your health records. We never share your data with third parties
                   without your explicit consent.
                 </p>
@@ -265,11 +260,8 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-md bg-gradient-to-br from-lavender-500 to-purple-600 flex items-center justify-center">
-                <Sparkles className="w-3 h-3 text-white" />
-              </div>
-              <span className="font-bold text-sakhi-text">SAKHI</span>
-              <span className="text-sakhi-muted text-sm">· Your Health. Your Understanding.</span>
+              <AnviaLogo size="sm" />
+              <span className="text-sakhi-muted text-sm">· Your Health. Our Priority.</span>
             </div>
             <p className="text-xs text-sakhi-muted">
               Educational information only. Not a substitute for professional medical advice.
