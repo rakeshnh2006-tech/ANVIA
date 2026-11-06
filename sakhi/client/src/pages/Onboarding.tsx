@@ -10,7 +10,6 @@ import { useToast } from '../components/ui/Toast'
 
 const onboardingSchema = z.object({
   display_name: z.string().max(50).optional(),
-  preferred_language: z.string().default('English'),
   age_range: z.string().optional(),
   wants_cycle_tracking: z.boolean().optional(),
   has_pcos_diagnosis: z.boolean().optional(),
@@ -19,7 +18,6 @@ const onboardingSchema = z.object({
 
 type OnboardingForm = z.infer<typeof onboardingSchema>
 
-const languages = ['English', 'Kannada', 'Hindi', 'Tamil', 'Telugu', 'Malayalam']
 const ageRanges = ['Under 18', '18–24', '25–34', '35–44', '45+', 'Prefer not to say']
 const steps = ['Welcome', 'Your Profile', 'Preferences', 'Privacy']
 
@@ -32,7 +30,7 @@ export default function Onboarding() {
   const { register, control, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm<OnboardingForm>({
     resolver: zodResolver(onboardingSchema),
     // ai_consent starts unchecked (false). The Zod schema requires literal true on submit.
-    defaultValues: { preferred_language: 'English', ai_consent: false as unknown as true },
+    defaultValues: { ai_consent: false as unknown as true },
   })
 
   const handleComplete = async (data: OnboardingForm) => {
@@ -40,7 +38,6 @@ export default function Onboarding() {
     const { error } = await supabase.from('profiles').upsert({
       id: user.id,
       display_name: data.display_name || null,
-      preferred_language: data.preferred_language,
       age_range: data.age_range || null,
       wants_cycle_tracking: data.wants_cycle_tracking ?? null,
       has_pcos_diagnosis: data.has_pcos_diagnosis ?? null,
@@ -69,7 +66,6 @@ export default function Onboarding() {
     await supabase.from('profiles').upsert({
       id: user.id,
       onboarding_completed: true,
-      preferred_language: 'English',
       updated_at: new Date().toISOString(),
     })
     // Record that AI consent was NOT given when the user skips onboarding
@@ -154,12 +150,6 @@ export default function Onboarding() {
                   <select {...register('age_range')} className="input-field">
                     <option value="">Prefer not to say</option>
                     {ageRanges.map(r => <option key={r} value={r}>{r}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="label">Preferred language</label>
-                  <select {...register('preferred_language')} className="input-field">
-                    {languages.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
                 </div>
               </div>

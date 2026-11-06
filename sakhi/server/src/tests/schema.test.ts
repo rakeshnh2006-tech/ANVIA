@@ -6,47 +6,33 @@ describe('SymptomInputSchema validation', () => {
   it('accepts valid input', () => {
     const result = SymptomInputSchema.safeParse({
       input: 'I have irregular periods and fatigue',
-      preferred_language: 'English',
     })
     expect(result.success).toBe(true)
   })
 
   it('rejects empty input', () => {
-    const result = SymptomInputSchema.safeParse({ input: '', preferred_language: 'English' })
+    const result = SymptomInputSchema.safeParse({ input: '' })
     expect(result.success).toBe(false)
   })
 
   it('rejects input shorter than 3 characters', () => {
-    const result = SymptomInputSchema.safeParse({ input: 'ab', preferred_language: 'English' })
+    const result = SymptomInputSchema.safeParse({ input: 'ab' })
     expect(result.success).toBe(false)
   })
 
   it('rejects input longer than 2000 characters', () => {
-    const result = SymptomInputSchema.safeParse({ input: 'a'.repeat(2001), preferred_language: 'English' })
+    const result = SymptomInputSchema.safeParse({ input: 'a'.repeat(2001) })
     expect(result.success).toBe(false)
   })
 
-  it('defaults preferred_language to English when not provided', () => {
+  it('accepts input with only the required field', () => {
     const result = SymptomInputSchema.safeParse({ input: 'I have headaches' })
-    expect(result.success).toBe(true)
-    if (result.success) {
-      expect(result.data.preferred_language).toBe('English')
-    }
-  })
-
-  it('accepts Kannada input', () => {
-    const result = SymptomInputSchema.safeParse({
-      input: 'ನನಗೆ ಮೂರು ತಿಂಗಳಿಂದ ಸರಿಯಾಗಿ ಪಿರಿಯಡ್ಸ್ ಆಗುತ್ತಿಲ್ಲ',
-      preferred_language: 'Kannada',
-    })
     expect(result.success).toBe(true)
   })
 })
 
 describe('AIResponseSchema validation', () => {
   const validResponse = {
-    original_language: 'English',
-    preferred_language: 'English',
     symptoms_identified: ['Irregular periods', 'Fatigue'],
     duration: '3 months',
     plain_language_explanation: 'Your symptoms may have several causes.',

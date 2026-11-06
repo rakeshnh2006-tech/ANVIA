@@ -13,7 +13,6 @@ export interface Database {
         Row: {
           id: string
           display_name: string | null
-          preferred_language: string | null
           age_range: string | null
           has_pcos_diagnosis: boolean | null
           wants_cycle_tracking: boolean | null
@@ -24,7 +23,6 @@ export interface Database {
         Insert: {
           id: string
           display_name?: string | null
-          preferred_language?: string | null
           age_range?: string | null
           has_pcos_diagnosis?: boolean | null
           wants_cycle_tracking?: boolean | null
@@ -34,7 +32,6 @@ export interface Database {
         }
         Update: {
           display_name?: string | null
-          preferred_language?: string | null
           age_range?: string | null
           has_pcos_diagnosis?: boolean | null
           wants_cycle_tracking?: boolean | null
@@ -102,8 +99,6 @@ export interface Database {
           id: string
           user_id: string
           original_input: string
-          detected_language: string | null
-          preferred_language: string | null
           structured_response: Json | null
           created_at: string
         }
@@ -111,8 +106,6 @@ export interface Database {
           id?: string
           user_id: string
           original_input: string
-          detected_language?: string | null
-          preferred_language?: string | null
           structured_response?: Json | null
           created_at?: string
         }

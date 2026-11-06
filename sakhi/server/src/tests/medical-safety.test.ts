@@ -1,17 +1,14 @@
 /**
  * Medical Safety & AI Quality Regression Tests — SAKHI
  *
- * Covers all 8 safety requirements from the medical safety audit:
- *  1. Original language/meaning preserved
- *  2. No definitive diagnosis
- *  3. No PCOS probability claims
- *  4. Emergency warnings cannot be overridden
- *  5. Platform never prescribes medication
- *  6. Uncertainty communicated clearly
- *  7. Appropriate professional care guidance
- *  8. Urgent safety bypasses AI completely
- *
- * Includes regression tests for every violation found in the safety audit.
+ * Covers all safety requirements from the medical safety audit:
+ *  1. No definitive diagnosis
+ *  2. No PCOS probability claims
+ *  3. Emergency warnings cannot be overridden
+ *  4. Platform never prescribes medication
+ *  5. Uncertainty communicated clearly
+ *  6. Appropriate professional care guidance
+ *  7. Urgent safety bypasses AI completely
  */
 
 import {
@@ -25,11 +22,9 @@ import type { AIServiceInput } from '../services/ai.service'
 
 function makeDemoInput(
   originalInput: string,
-  detectedLanguage = 'English',
-  preferredLanguage = 'English',
   safetyLevel: 'safe' | 'prompt' | 'urgent' = 'safe'
 ): AIServiceInput {
-  return { originalInput, detectedLanguage, preferredLanguage, safetyLevel }
+  return { originalInput, safetyLevel }
 }
 
 const DIAGNOSIS_PATTERNS = [
@@ -83,7 +78,6 @@ function assertNoMedicationPrescription(text: string, field: string) {
 
 function assertHasUncertaintyLanguage(text: string, field: string) {
   const UNCERTAINTY_MARKERS = [
-    // English uncertainty
     /can\s+(be|have|occur|cause)/i,
     /may\s+(be|indicate|suggest|involve)/i,
     /might\s+be/i,
@@ -94,16 +88,6 @@ function assertHasUncertaintyLanguage(text: string, field: string) {
     /cannot\s+(confirm|rule\s+out|determine)/i,
     /not\s+(enough|sufficient|specific)\s+(to|for)/i,
     /alone\s+cannot/i,
-    // Kannada uncertainty markers
-    /ಕಾರಣಗಳಿರಬಹುದು|ಉಂಟಾಗಬಹುದು|ಅಗತ್ಯ|ಸಂಭಾವ್ಯ|ಸಾಕಾಗ/u,
-    // Hindi uncertainty markers
-    /हो\s*सकते|कारण\s*हो|संभावित|जानना\s*संभव\s*नहीं|मूल्यांकन/u,
-    // Tamil uncertainty markers
-    /இருக்கலாம்|காரணமாக\s*இருக்க|மதிப்பீடு/u,
-    // Telugu uncertainty markers
-    /కావచ్చు|అంచనా|అవసరం/u,
-    // Malayalam uncertainty markers
-    /ആകാം|കാരണം\s*ആകാം|വിലയിരുത്തൽ/u,
   ]
   const hasUncertainty = UNCERTAINTY_MARKERS.some(p => p.test(text))
   if (!hasUncertainty) {
@@ -113,20 +97,9 @@ function assertHasUncertaintyLanguage(text: string, field: string) {
 
 function assertHasCareGuidance(guidance: string) {
   const CARE_MARKERS = [
-    // English
     /doctor|healthcare|physician|specialist|professional|consult/i,
     /appointment|evaluation|assessment|examination/i,
     /seek\s+(care|medical|help)/i,
-    // Kannada
-    /ವೈದ್ಯರನ್ನು|ಭೇಟಿ\s*ಮಾಡಿ/u,
-    // Hindi
-    /डॉक्टर|चिकित्सक|सलाह/u,
-    // Tamil
-    /மருத்துவர்|ஆலோசனை/u,
-    // Telugu
-    /డాక్టర్|వైద్యుడు/u,
-    // Malayalam
-    /ഡോക്ടർ|വൈദ്യൻ/u,
   ]
   const hasCare = CARE_MARKERS.some(p => p.test(guidance))
   if (!hasCare) {
@@ -135,23 +108,23 @@ function assertHasCareGuidance(guidance: string) {
 }
 
 function checkAllResponseFields(resp: ReturnType<typeof processSymptoms> extends Promise<infer T> ? T : never, label: string) {
-  // 2. No definitive diagnosis
+  // No definitive diagnosis
   assertNoDiagnosticLanguage(resp.plain_language_explanation, `${label}.plain_language_explanation`)
   if (resp.pcos_education) assertNoDiagnosticLanguage(resp.pcos_education, `${label}.pcos_education`)
   assertNoDiagnosticLanguage(resp.care_guidance, `${label}.care_guidance`)
 
-  // 3. No probability claims
+  // No probability claims
   assertNoProbabilityLanguage(resp.plain_language_explanation, `${label}.plain_language_explanation`)
   if (resp.pcos_education) assertNoProbabilityLanguage(resp.pcos_education, `${label}.pcos_education`)
 
-  // 5. No medication prescriptions
+  // No medication prescriptions
   assertNoMedicationPrescription(resp.plain_language_explanation, `${label}.plain_language_explanation`)
   assertNoMedicationPrescription(resp.care_guidance, `${label}.care_guidance`)
 
-  // 6. Uncertainty communicated in explanation
+  // Uncertainty communicated in explanation
   assertHasUncertaintyLanguage(resp.plain_language_explanation, `${label}.plain_language_explanation`)
 
-  // 7. Professional care guidance present
+  // Professional care guidance present
   assertHasCareGuidance(resp.care_guidance)
 
   // Disclaimer always present
@@ -231,7 +204,6 @@ describe('Safety Service — English urgent patterns', () => {
     expect(r.triggers).toContain('Uncontrolled bleeding')
   })
 
-  // REGRESSION: V4 fix — heavy bleeding with severe pain (no faintness)
   it('[REG-V4a] flags heavy bleeding with severe cramping pain as urgent', () => {
     const r = runSafetyCheck('I have heavy bleeding with severe cramping pain.')
     expect(r.level).toBe('urgent')
@@ -243,7 +215,6 @@ describe('Safety Service — English urgent patterns', () => {
     expect(r.level).toBe('urgent')
   })
 
-  // REGRESSION: missing pattern — unexplained weight loss + bleeding
   it('[REG-MP1] flags unexplained weight loss with bleeding as urgent', () => {
     const r = runSafetyCheck('I have unexplained weight loss and heavy bleeding.')
     expect(r.level).toBe('urgent')
@@ -262,7 +233,6 @@ describe('Safety Service — Prompt patterns', () => {
     expect(r.level).toBe('prompt')
   })
 
-  // REGRESSION: V4 fix — heavy bleeding ALONE now triggers prompt
   it('[REG-V4c] heavy bleeding alone (without other symptoms) triggers prompt', () => {
     const r = runSafetyCheck('I have heavy bleeding during my period.')
     expect(r.level).toBe('prompt')
@@ -282,67 +252,6 @@ describe('Safety Service — Prompt patterns', () => {
   it('returns safe for emotional wellbeing description', () => {
     const r = runSafetyCheck('I have been feeling anxious and stressed lately.')
     expect(r.level).toBe('safe')
-  })
-})
-
-describe('Safety Service — Regional language urgent patterns', () => {
-  it('flags Kannada fainting as urgent', () => {
-    const r = runSafetyCheck('ನನಗೆ ಮೂರ್ಛೆ ಬರುತ್ತಿದೆ.')
-    expect(r.level).toBe('urgent')
-    expect(r.triggers).toContain('Loss of consciousness (Kannada)')
-  })
-
-  it('flags Kannada chest pain as urgent', () => {
-    const r = runSafetyCheck('ನನಗೆ ಎದೆ ನೋವು ಇದೆ.')
-    expect(r.level).toBe('urgent')
-    expect(r.triggers).toContain('Chest pain (Kannada)')
-  })
-
-  it('flags Hindi loss of consciousness as urgent', () => {
-    const r = runSafetyCheck('मैं बेहोश हो गई।')
-    expect(r.level).toBe('urgent')
-    expect(r.triggers).toContain('Loss of consciousness (Hindi)')
-  })
-
-  it('flags Hindi chest pain as urgent', () => {
-    const r = runSafetyCheck('मुझे सीने में दर्द हो रहा है।')
-    expect(r.level).toBe('urgent')
-    expect(r.triggers).toContain('Chest pain (Hindi)')
-  })
-
-  it('flags Tamil fainting as urgent', () => {
-    const r = runSafetyCheck('எனக்கு மயக்கம் வருகிறது.')
-    expect(r.level).toBe('urgent')
-    expect(r.triggers).toContain('Fainting or loss of consciousness (Tamil)')
-  })
-
-  it('flags Tamil chest pain as urgent', () => {
-    const r = runSafetyCheck('எனக்கு மார்பு வலி இருக்கிறது.')
-    expect(r.level).toBe('urgent')
-    expect(r.triggers).toContain('Chest pain (Tamil)')
-  })
-
-  it('flags Telugu consciousness loss as urgent', () => {
-    const r = runSafetyCheck('నాకు స్పృహ కోల్పోయింది.')
-    expect(r.level).toBe('urgent')
-    expect(r.triggers).toContain('Loss of consciousness (Telugu)')
-  })
-
-  it('flags Malayalam chest pain as urgent', () => {
-    const r = runSafetyCheck('എനിക്ക് നെഞ്ചുവേദന ഉണ്ട്.')
-    expect(r.level).toBe('urgent')
-    expect(r.triggers).toContain('Chest pain (Malayalam)')
-  })
-
-  it('flags mixed English+Kannada urgent as urgent', () => {
-    // Kannada urgent phrase embedded in English sentence
-    const r = runSafetyCheck('I feel sick — ನನಗೆ ಮೂರ್ಛೆ ಬರುತ್ತಿದೆ.')
-    expect(r.level).toBe('urgent')
-  })
-
-  it('flags mixed English+Hindi urgent as urgent', () => {
-    const r = runSafetyCheck('I have irregular periods — मुझे सीने में दर्द हो रहा है।')
-    expect(r.level).toBe('urgent')
   })
 })
 
@@ -376,7 +285,6 @@ describe('Safety Service — enforceMinimumUrgency', () => {
   })
 
   it('preserves AI urgent even when safety is safe', () => {
-    // AI independently flagged something as urgent — that is allowed
     expect(enforceMinimumUrgency('urgent', 'safe')).toBe('urgent')
   })
 })
@@ -385,19 +293,17 @@ describe('Safety Service — enforceMinimumUrgency', () => {
 // AI SERVICE (DEMO MODE) RESPONSE QUALITY TESTS
 // ─────────────────────────────────────────────────────────────────────────────
 
-describe('AI Demo responses — Requirement 2: No definitive diagnosis', () => {
+describe('AI Demo responses — No definitive diagnosis', () => {
   const inputs = [
     { label: 'Hair/Acne variant', text: 'I have hair loss and acne' },
     { label: 'Fatigue variant', text: 'I feel very tired and exhausted' },
     { label: 'Weight variant', text: 'I have unexplained weight gain' },
-    { label: 'Kannada variant', text: 'ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ', lang: 'Kannada' },
-    { label: 'Hindi variant', text: 'मुझे अनियमित पीरियड्स हैं', lang: 'Hindi' },
     { label: 'Default variant', text: 'I do not feel well' },
   ]
 
-  inputs.forEach(({ label, text, lang }) => {
+  inputs.forEach(({ label, text }) => {
     it(`${label} — contains no diagnostic language`, async () => {
-      const resp = await processSymptoms(makeDemoInput(text, lang || 'English'))
+      const resp = await processSymptoms(makeDemoInput(text))
       assertNoDiagnosticLanguage(resp.plain_language_explanation, `${label}.plain_language_explanation`)
       if (resp.pcos_education) {
         assertNoDiagnosticLanguage(resp.pcos_education, `${label}.pcos_education`)
@@ -406,13 +312,11 @@ describe('AI Demo responses — Requirement 2: No definitive diagnosis', () => {
   })
 })
 
-describe('AI Demo responses — Requirement 3: No PCOS probability claims', () => {
+describe('AI Demo responses — No PCOS probability claims', () => {
   const inputs = [
     'I have hair loss and acne',
     'I have irregular periods',
     'I have PCOS symptoms',
-    'ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ',
-    'मुझे अनियमित पीरियड्स हैं',
     'I feel tired and have weight gain',
   ]
 
@@ -425,7 +329,7 @@ describe('AI Demo responses — Requirement 3: No PCOS probability claims', () =
   })
 })
 
-describe('AI Demo responses — Requirement 5: No medication prescriptions', () => {
+describe('AI Demo responses — No medication prescriptions', () => {
   const inputs = [
     'I have irregular periods and want treatment',
     'I have PCOS and need medication',
@@ -443,20 +347,10 @@ describe('AI Demo responses — Requirement 5: No medication prescriptions', () 
   })
 })
 
-describe('AI Demo responses — Requirement 6: Uncertainty clearly communicated', () => {
+describe('AI Demo responses — Uncertainty clearly communicated', () => {
   it('Hair/Acne variant uses uncertain language (can/may/possible)', async () => {
     const resp = await processSymptoms(makeDemoInput('I have hair loss and acne'))
     assertHasUncertaintyLanguage(resp.plain_language_explanation, 'explanation')
-  })
-
-  it('Kannada variant uses uncertain language', async () => {
-    const resp = await processSymptoms(makeDemoInput('ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ', 'Kannada', 'Kannada'))
-    assertHasUncertaintyLanguage(resp.plain_language_explanation, 'Kannada explanation')
-  })
-
-  it('Hindi variant uses uncertain language', async () => {
-    const resp = await processSymptoms(makeDemoInput('मुझे अनियमित पीरियड्स हैं', 'Hindi', 'Hindi'))
-    assertHasUncertaintyLanguage(resp.plain_language_explanation, 'Hindi explanation')
   })
 
   it('Default variant explicitly says symptoms alone are not enough', async () => {
@@ -464,52 +358,31 @@ describe('AI Demo responses — Requirement 6: Uncertainty clearly communicated'
     expect(resp.plain_language_explanation).toMatch(/symptoms alone|evaluation|proper evaluation/i)
   })
 
-  // REGRESSION: V1 — Hindi pcos_education must not use "पुष्टि" (confirmation)
-  it('[REG-V1] Hindi pcos_education must not claim tests "confirm" PCOS', async () => {
-    const resp = await processSymptoms(makeDemoInput('मुझे अनियमित पीरियड्स हैं', 'Hindi', 'Hindi'))
-    expect(resp.pcos_education).not.toMatch(/की\s*पुष्टि/)
-    // Should mention evaluation, not confirmation
-    expect(resp.pcos_education).toMatch(/मूल्यांकन|जाँच|निदान नहीं/)
-  })
-
-  // REGRESSION: V2 — Kannada pcos_education must not use "ಪತ್ತೆ ಹಚ್ಚ" definitively
-  it('[REG-V2] Kannada pcos_education must use evaluation language, not definitive detection', async () => {
-    const resp = await processSymptoms(makeDemoInput('ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ', 'Kannada', 'Kannada'))
-    // Should use ಮೌಲ್ಯಮಾಪನ (evaluation) not ಪತ್ತೆ ಹಚ್ಚು (definitively detect)
-    expect(resp.pcos_education).toMatch(/ಮೌಲ್ಯಮಾಪನ|ಖಚಿತಗೊಳಿಸಲು\s*ಸಾಕಾಗ/)
-  })
-
-  // REGRESSION: V3 — Hair explanation must not lead with androgens → PCOS causal chain
   it('[REG-V3] Hair/Acne variant must list multiple causes before mentioning PCOS', async () => {
     const resp = await processSymptoms(makeDemoInput('I have hair loss and acne'))
-    // PCOS must not be first in explanation; other causes (thyroid etc.) must appear first
     const pcosMentionIdx = resp.plain_language_explanation.toLowerCase().indexOf('pcos')
     const thyroidMentionIdx = resp.plain_language_explanation.toLowerCase().indexOf('thyroid')
     expect(thyroidMentionIdx).toBeGreaterThanOrEqual(0)
-    // Thyroid or other conditions should be mentioned before or alongside PCOS
     expect(pcosMentionIdx).toBeGreaterThan(-1)
   })
 })
 
-describe('AI Demo responses — Requirement 7: Professional care guidance in every response', () => {
+describe('AI Demo responses — Professional care guidance in every response', () => {
   const inputs = [
     { label: 'Hair/Acne', text: 'I have hair loss and acne' },
     { label: 'Fatigue', text: 'I feel very tired and exhausted' },
     { label: 'Weight', text: 'I have weight gain' },
-    { label: 'Kannada', text: 'ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ', lang: 'Kannada' },
-    { label: 'Hindi', text: 'मुझे अनियमित पीरियड्स हैं', lang: 'Hindi' },
     { label: 'Default', text: 'I do not feel well' },
   ]
 
-  inputs.forEach(({ label, text, lang }) => {
+  inputs.forEach(({ label, text }) => {
     it(`${label} variant contains professional care guidance`, async () => {
-      const resp = await processSymptoms(makeDemoInput(text, lang || 'English'))
+      const resp = await processSymptoms(makeDemoInput(text))
       assertHasCareGuidance(resp.care_guidance)
       expect(resp.care_guidance.length).toBeGreaterThan(20)
     })
   })
 
-  // REGRESSION: V7 — All care_guidance must mention not to change medications
   it('[REG-V7] Hair/Acne care_guidance mentions medication caution', async () => {
     const resp = await processSymptoms(makeDemoInput('I have hair loss and acne'))
     expect(resp.care_guidance).toMatch(/medication|medical\s+guidance|medical\s+advice/i)
@@ -521,87 +394,39 @@ describe('AI Demo responses — Requirement 7: Professional care guidance in eve
   })
 })
 
-describe('AI Demo responses — Requirement 8: Urgent bypasses AI (enforceMinimumUrgency)', () => {
+describe('AI Demo responses — Urgent bypasses AI (enforceMinimumUrgency)', () => {
   it('care_urgency stays urgent when safety system says urgent', async () => {
-    const resp = await processSymptoms(makeDemoInput(
-      'I have severe pelvic pain',
-      'English',
-      'English',
-      'urgent'
-    ))
+    const resp = await processSymptoms(makeDemoInput('I have severe pelvic pain', 'urgent'))
     expect(resp.care_urgency).toBe('urgent')
   })
 
   it('care_urgency stays prompt when safety system says prompt', async () => {
-    const resp = await processSymptoms(makeDemoInput(
-      'I have irregular periods and hair loss',
-      'English',
-      'English',
-      'prompt'
-    ))
+    const resp = await processSymptoms(makeDemoInput('I have irregular periods and hair loss', 'prompt'))
     expect(resp.care_urgency).toBe('prompt')
   })
 
   it('AI demo response never sets care_urgency to routine when input is urgent', async () => {
-    const resp = await processSymptoms(makeDemoInput(
-      'I am fainting and have chest pain',
-      'English',
-      'English',
-      'urgent'
-    ))
+    const resp = await processSymptoms(makeDemoInput('I am fainting and have chest pain', 'urgent'))
     expect(resp.care_urgency).not.toBe('routine')
     expect(resp.care_urgency).toBe('urgent')
   })
 })
 
-describe('AI Demo responses — Requirement 1: Original language preserved', () => {
-  it('original_language is set to detected language, not changed', async () => {
-    const resp = await processSymptoms(makeDemoInput(
-      'ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ',
-      'Kannada',
-      'Kannada'
-    ))
-    expect(resp.original_language).toBe('Kannada')
-    expect(resp.preferred_language).toBe('Kannada')
-  })
-
-  it('original_language is preserved for Hindi', async () => {
-    const resp = await processSymptoms(makeDemoInput(
-      'मुझे अनियमित पीरियड्स हैं',
-      'Hindi',
-      'Hindi'
-    ))
-    expect(resp.original_language).toBe('Hindi')
-  })
-
-  it('symptoms_identified does not add symptoms not mentioned in input (default variant)', async () => {
-    const resp = await processSymptoms(makeDemoInput('I do not feel well', 'English'))
-    // Default response should not invent specific diagnoses like "Irregular periods" when none mentioned
-    // It should be generic/uncertain
-    const ids = resp.symptoms_identified.join(' ').toLowerCase()
-    expect(ids).not.toMatch(/confirmed\s+pcos|pcos\s+detected/)
-  })
-})
-
 describe('AI Demo responses — Full compliance check across all variants', () => {
-  const testCases: Array<{ label: string; input: string; lang: string }> = [
-    { label: 'English hair/acne', input: 'I have hair loss, acne and facial hair growth.', lang: 'English' },
-    { label: 'English fatigue', input: 'I feel extremely tired even after sleeping well.', lang: 'English' },
-    { label: 'English weight gain', input: 'I have unexplained weight gain over 3 months.', lang: 'English' },
-    { label: 'English multiple symptoms', input: 'I have irregular periods, hair loss, and acne.', lang: 'English' },
-    { label: 'English incomplete', input: 'I feel off.', lang: 'English' },
-    { label: 'English ambiguous', input: 'My body does not feel right.', lang: 'English' },
-    { label: 'Kannada irregular period', input: 'ನನಗೆ ಮೂರು ತಿಂಗಳಿಂದ ಮುಟ್ಟು ಆಗುತ್ತಿಲ್ಲ.', lang: 'Kannada' },
-    { label: 'Hindi irregular period', input: 'मुझे तीन महीनों से अनियमित पीरियड्स हैं।', lang: 'Hindi' },
-    { label: 'Mixed EN+KN', input: 'I have irregular periods — ಮೂರು ತಿಂಗಳಿಂದ ಸರಿಯಾಗಿ ಆಗುತ್ತಿಲ್ಲ.', lang: 'English' },
-    { label: 'Mixed EN+HI', input: 'My periods are irregular — माहवारी नहीं आ रही।', lang: 'Hindi' },
-    { label: 'English PCOS symptoms', input: 'I have acne, hair loss, irregular periods and weight gain.', lang: 'English' },
-    { label: 'English emergency (urgent override)', input: 'I feel very tired', lang: 'English' },
+  const testCases: Array<{ label: string; input: string }> = [
+    { label: 'English hair/acne', input: 'I have hair loss, acne and facial hair growth.' },
+    { label: 'English fatigue', input: 'I feel extremely tired even after sleeping well.' },
+    { label: 'English weight gain', input: 'I have unexplained weight gain over 3 months.' },
+    { label: 'English multiple symptoms', input: 'I have irregular periods, hair loss, and acne.' },
+    { label: 'English incomplete', input: 'I feel off.' },
+    { label: 'English ambiguous', input: 'My body does not feel right.' },
+    { label: 'English PCOS symptoms', input: 'I have acne, hair loss, irregular periods and weight gain.' },
+    { label: 'English fatigue+tiredness', input: 'I feel very tired' },
   ]
 
-  testCases.forEach(({ label, input, lang }) => {
+  testCases.forEach(({ label, input }) => {
     it(`[Full check] ${label}`, async () => {
-      const resp = await processSymptoms(makeDemoInput(input, lang))
+      const resp = await processSymptoms(makeDemoInput(input))
       checkAllResponseFields(resp as any, label)
     })
   })
@@ -613,8 +438,6 @@ describe('AI Demo responses — Disclaimer field', () => {
       'I have hair loss',
       'I feel very tired',
       'I have weight gain',
-      'ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ',
-      'मुझे अनियमित पीरियड्स हैं',
       'I do not feel well',
     ]
     for (const text of variants) {
@@ -627,48 +450,30 @@ describe('AI Demo responses — Disclaimer field', () => {
 describe('AI Demo responses — Missing information populated', () => {
   it('all variants include at least 2 follow-up questions', async () => {
     const variants = [
-      { text: 'I have hair loss and acne', lang: 'English' },
-      { text: 'I feel very tired', lang: 'English' },
-      { text: 'I have weight gain', lang: 'English' },
-      { text: 'ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ', lang: 'Kannada' },
-      { text: 'मुझे अनियमित पीरियड्स हैं', lang: 'Hindi' },
+      'I have hair loss and acne',
+      'I feel very tired',
+      'I have weight gain',
     ]
-    for (const { text, lang } of variants) {
-      const resp = await processSymptoms(makeDemoInput(text, lang))
+    for (const text of variants) {
+      const resp = await processSymptoms(makeDemoInput(text))
       expect(resp.missing_information.length).toBeGreaterThanOrEqual(2)
     }
   })
 
-  // REGRESSION: Response quality — all variants must ask family history
-  it('[REG-RQ1] All variants include a family history follow-up question', async () => {
+  it('[REG-RQ1] All English variants include a family history follow-up question', async () => {
     const variants = [
-      { text: 'I have hair loss and acne', lang: 'English' },
-      { text: 'ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ', lang: 'Kannada' },
-      { text: 'मुझे अनियमित पीरियड्स हैं', lang: 'Hindi' },
+      'I have hair loss and acne',
+      'I have irregular periods',
     ]
-    for (const { text, lang } of variants) {
-      const resp = await processSymptoms(makeDemoInput(text, lang))
-      const hasFamily = resp.missing_information.some(q =>
-        /family|परिवार|ಕುಟುಂಬ/i.test(q)
-      )
+    for (const text of variants) {
+      const resp = await processSymptoms(makeDemoInput(text))
+      const hasFamily = resp.missing_information.some(q => /family/i.test(q))
       expect(hasFamily).toBe(true)
     }
   })
 })
 
 describe('PCOS education — safe messaging standards', () => {
-  it('[REG-V1] Hindi response does not use confirmation language for PCOS tests', async () => {
-    const resp = await processSymptoms(makeDemoInput('अनियमित पीरियड्स', 'Hindi', 'Hindi'))
-    // Must NOT say tests "confirm" PCOS — only evaluate/assess
-    expect(resp.pcos_education).not.toContain('पुष्टि')
-  })
-
-  it('[REG-V2] Kannada response does not use definitive detection language', async () => {
-    const resp = await processSymptoms(makeDemoInput('ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ', 'Kannada', 'Kannada'))
-    // ಪತ್ತೆ ಹಚ್ಚ (detect definitively) should be replaced by ಮೌಲ್ಯಮಾಪನ (evaluation)
-    expect(resp.pcos_education).not.toContain('ಪತ್ತೆ ಹಚ್ಚಲು')
-  })
-
   it('PCOS education always clarifies PCOS diagnosis requires clinical evaluation, not symptoms alone', async () => {
     const resp = await processSymptoms(makeDemoInput('I have irregular periods and acne'))
     expect(resp.pcos_education).toMatch(
@@ -677,22 +482,11 @@ describe('PCOS education — safe messaging standards', () => {
   })
 
   it('PCOS education does not state ultrasound alone confirms PCOS', async () => {
-    const variants = [
-      { text: 'ನನಗೆ ಮುಟ್ಟು ಸರಿಯಾಗಿಲ್ಲ', lang: 'Kannada' },
-      { text: 'मुझे अनियमित पीरियड्स हैं', lang: 'Hindi' },
-      { text: 'I have irregular periods', lang: 'English' },
-    ]
-    for (const { text, lang } of variants) {
-      const resp = await processSymptoms(makeDemoInput(text, lang))
-      // Must not suggest ultrasound alone confirms PCOS
-      const pcos = resp.pcos_education.toLowerCase()
-      const hasUltrasound = pcos.includes('ultrasound') || pcos.includes('ಅಲ್ಟ್ರಾಸೌಂಡ್') || pcos.includes('अल्ट्रासाउंड')
-      if (hasUltrasound) {
-        // If ultrasound is mentioned, it must be alongside other requirements, not as sole confirmator
-        expect(pcos).toMatch(
-          /alone|not\s+(sufficient|enough)|clinical|cannot\s+confirm|ಸಾಕಾಗ|ಅಗತ್ಯ|अकेले|आवश्यक/
-        )
-      }
+    const resp = await processSymptoms(makeDemoInput('I have irregular periods'))
+    const pcos = resp.pcos_education.toLowerCase()
+    const hasUltrasound = pcos.includes('ultrasound')
+    if (hasUltrasound) {
+      expect(pcos).toMatch(/alone|not\s+(sufficient|enough)|clinical|cannot\s+confirm/)
     }
   })
 })

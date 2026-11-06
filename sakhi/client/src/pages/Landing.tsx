@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
-  Sparkles, ArrowRight, Languages, Shield, Heart, BookOpen,
+  Sparkles, ArrowRight, Shield, Heart, BookOpen,
   CalendarDays, FileText, ChevronDown, CheckCircle
 } from 'lucide-react'
 
@@ -10,11 +10,6 @@ const features = [
     icon: <Sparkles className="w-5 h-5" />,
     title: 'AI Symptom Understanding',
     desc: 'Describe symptoms naturally. Our AI explains possible health associations in clear, simple language.'
-  },
-  {
-    icon: <Languages className="w-5 h-5" />,
-    title: 'Multilingual Support',
-    desc: 'Communicate in English, Kannada, Hindi, Tamil, Telugu or Malayalam — your language, your words.'
   },
   {
     icon: <BookOpen className="w-5 h-5" />,
@@ -42,7 +37,7 @@ const howItWorks = [
   {
     step: '01',
     title: 'Describe how you feel',
-    desc: 'Type your symptoms naturally — no medical jargon needed. Use your preferred language.'
+    desc: 'Type your symptoms naturally — no medical jargon needed.'
   },
   {
     step: '02',
@@ -61,8 +56,6 @@ const howItWorks = [
   },
 ]
 
-const languages = ['English', 'ಕನ್ನಡ', 'हिन्दी', 'தமிழ்', 'తెలుగు', 'മലയാളം']
-
 const faqs = [
   {
     q: 'Does SAKHI diagnose medical conditions?',
@@ -71,10 +64,6 @@ const faqs = [
   {
     q: 'Is my health information private?',
     a: 'Yes. All your data is stored securely and is only accessible to you. We use Supabase Row Level Security to ensure your health records are never accessible to other users.'
-  },
-  {
-    q: 'Which languages are supported?',
-    a: 'SAKHI supports English, Kannada, Hindi, Tamil, Telugu and Malayalam. You can also use mixed-language inputs.'
   },
   {
     q: 'What should I do in an emergency?',
@@ -142,7 +131,7 @@ export default function Landing() {
             <span className="text-gradient">Take Informed Steps.</span>
           </h1>
           <p className="text-lg text-sakhi-muted max-w-2xl mx-auto mb-8 leading-relaxed">
-            SAKHI helps you describe your health symptoms in your own words and language,
+            SAKHI helps you describe your health symptoms in your own words,
             understand possible associations, track your cycle, and prepare for conversations
             with your healthcare provider.
           </p>
@@ -155,14 +144,6 @@ export default function Landing() {
             </Link>
           </div>
 
-          {/* Language badges */}
-          <div className="flex flex-wrap justify-center gap-2 mt-10">
-            {languages.map(lang => (
-              <span key={lang} className="bg-white border border-sakhi-border px-3 py-1.5 rounded-full text-xs text-sakhi-muted shadow-card">
-                {lang}
-              </span>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -180,7 +161,7 @@ export default function Landing() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-sakhi-text mb-3">Everything you need to understand your health</h2>
             <p className="text-sakhi-muted max-w-xl mx-auto">
-              SAKHI combines AI-powered symptom education, multilingual support and personal health tracking in one secure platform.
+              SAKHI combines AI-powered symptom education and personal health tracking in one secure platform.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -288,7 +269,7 @@ export default function Landing() {
                 <Sparkles className="w-3 h-3 text-white" />
               </div>
               <span className="font-bold text-sakhi-text">SAKHI</span>
-              <span className="text-sakhi-muted text-sm">· Your Health. Your Language. Your Understanding.</span>
+              <span className="text-sakhi-muted text-sm">· Your Health. Your Understanding.</span>
             </div>
             <p className="text-xs text-sakhi-muted">
               Educational information only. Not a substitute for professional medical advice.

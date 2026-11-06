@@ -1,7 +1,6 @@
 /**
  * AI symptom analysis route tests.
- * Tests: English, Kannada, Hindi, mixed-language, invalid AI response,
- * API unavailable (demo mode), empty input, extremely long input.
+ * Tests: symptom analysis, validation edge cases, safety escalation, history.
  */
 import request from 'supertest'
 import app from '../app'
@@ -69,11 +68,11 @@ jest.mock('@supabase/supabase-js', () => ({
 // Expected statuses for AI analyze — includes 429 (rate limit from aiLimiter in tests)
 const ANALYZE_OK = [200, 201, 429]
 
-async function analyze(input: string, preferred_language = 'English') {
+async function analyze(input: string) {
   return request(app)
     .post('/api/symptom/analyze')
     .set('Authorization', TOKEN)
-    .send({ input, preferred_language })
+    .send({ input })
 }
 
 // ─── Tests ─────────────────────────────────────────────────────────────────
@@ -122,43 +121,12 @@ describe('AI analyze — English inputs', () => {
   })
 })
 
-describe('AI analyze — Kannada input', () => {
-  it('accepts Kannada symptom description', async () => {
-    const res = await analyze('ನನಗೆ ಮೂರು ತಿಂಗಳಿಂದ ಸರಿಯಾಗಿ ಪಿರಿಯಡ್ಸ್ ಆಗುತ್ತಿಲ್ಲ.', 'Kannada')
-    expect(ANALYZE_OK).toContain(res.status)
-  })
-
-  it('does not lose the original Kannada input in history', async () => {
-    const res = await analyze('ಕೂದಲು ಉದುರುತ್ತಿದೆ ಮತ್ತು ಮೊಡವೆಗಳು ಬರುತ್ತಿವೆ.', 'Kannada')
-    expect(ANALYZE_OK).toContain(res.status)
-  })
-})
-
-describe('AI analyze — Hindi input', () => {
-  it('accepts Hindi symptom description', async () => {
-    const res = await analyze('मुझे तीन महीनों से अनियमित पीरियड्स आ रहे हैं।', 'Hindi')
-    expect(ANALYZE_OK).toContain(res.status)
-  })
-})
-
-describe('AI analyze — mixed language input', () => {
-  it('accepts English + Kannada mixed input', async () => {
-    const res = await analyze('I have irregular periods — ಮೂರು ತಿಂಗಳಿಂದ ಸರಿಯಾಗಿ ಆಗುತ್ತಿಲ್ಲ.')
-    expect(ANALYZE_OK).toContain(res.status)
-  })
-
-  it('accepts English + Hindi mixed input', async () => {
-    const res = await analyze('My periods are irregular — माहवारी नहीं आ रही।', 'Hindi')
-    expect(ANALYZE_OK).toContain(res.status)
-  })
-})
-
 describe('AI analyze — validation edge cases', () => {
   it('returns 400 for empty input string', async () => {
     const res = await request(app)
       .post('/api/symptom/analyze')
       .set('Authorization', TOKEN)
-      .send({ input: '', preferred_language: 'English' })
+      .send({ input: '' })
     expect(res.status).toBe(400)
   })
 
@@ -166,7 +134,7 @@ describe('AI analyze — validation edge cases', () => {
     const res = await request(app)
       .post('/api/symptom/analyze')
       .set('Authorization', TOKEN)
-      .send({ input: '   \n\t  ', preferred_language: 'English' })
+      .send({ input: '   \n\t  ' })
     // Schema uses .trim().min(3) — whitespace trims to '' which fails min(3)
     expect([400, 429]).toContain(res.status)
   })
@@ -175,7 +143,7 @@ describe('AI analyze — validation edge cases', () => {
     const res = await request(app)
       .post('/api/symptom/analyze')
       .set('Authorization', TOKEN)
-      .send({ input: 'A'.repeat(3001), preferred_language: 'English' })
+      .send({ input: 'A'.repeat(3001) })
     // Either the schema rejects it (400), Express body limit (413), or rate-limited (429)
     expect([400, 413, 422, 429]).toContain(res.status)
   })
@@ -184,14 +152,14 @@ describe('AI analyze — validation edge cases', () => {
     const res = await request(app)
       .post('/api/symptom/analyze')
       .set('Authorization', TOKEN)
-      .send({ preferred_language: 'English' })
+      .send({})
     expect([400, 429]).toContain(res.status)
   })
 
   it('returns 401 for request without Authorization header (or 429 if rate-limited)', async () => {
     const res = await request(app)
       .post('/api/symptom/analyze')
-      .send({ input: 'I have irregular periods', preferred_language: 'English' })
+      .send({ input: 'I have irregular periods' })
     expect([401, 429]).toContain(res.status)
   })
 })

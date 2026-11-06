@@ -10,13 +10,11 @@ import { useNavigate } from 'react-router-dom'
 
 const profileSchema = z.object({
   display_name: z.string().max(50).optional(),
-  preferred_language: z.string().default('English'),
   age_range: z.string().optional(),
 })
 
 type ProfileForm = z.infer<typeof profileSchema>
 
-const LANGUAGES = ['English', 'Kannada', 'Hindi', 'Tamil', 'Telugu', 'Malayalam']
 const AGE_RANGES = ['Under 18', '18–24', '25–34', '35–44', '45+', 'Prefer not to say']
 
 export default function Profile() {
@@ -30,7 +28,6 @@ export default function Profile() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       display_name: profile?.display_name || '',
-      preferred_language: profile?.preferred_language || 'English',
       age_range: profile?.age_range || '',
     },
   })
@@ -39,7 +36,6 @@ export default function Profile() {
     if (!user) return
     const { error } = await supabase.from('profiles').update({
       display_name: data.display_name || null,
-      preferred_language: data.preferred_language,
       age_range: data.age_range || null,
       updated_at: new Date().toISOString(),
     }).eq('id', user.id)
@@ -125,12 +121,6 @@ export default function Profile() {
             <div>
               <label className="label">Display name</label>
               <input {...register('display_name')} type="text" className="input-field" placeholder="How should we address you?" maxLength={50} />
-            </div>
-            <div>
-              <label className="label">Preferred language</label>
-              <select {...register('preferred_language')} className="input-field">
-                {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-              </select>
             </div>
             <div>
               <label className="label">Age range</label>

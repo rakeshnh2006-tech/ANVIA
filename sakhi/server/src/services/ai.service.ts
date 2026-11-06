@@ -16,8 +16,6 @@ import { AIResponseSchema } from '../schemas/symptom.schema'
 
 export interface AIServiceInput {
   originalInput: string
-  detectedLanguage: string
-  preferredLanguage: string
   safetyLevel: 'safe' | 'prompt' | 'urgent'
 }
 
@@ -30,13 +28,10 @@ CRITICAL RULES:
 4. Never prescribe or recommend medications.
 5. If care_urgency was set to 'urgent' by the safety system, you MUST keep it 'urgent'.
 6. Be supportive, non-judgmental, and clear.
-7. Respond in the user's preferred language.
-8. Always include the disclaimer.
+7. Always include the disclaimer.
 
 You must respond with ONLY valid JSON matching this exact schema:
 {
-  "original_language": string,
-  "preferred_language": string,
   "symptoms_identified": string[],
   "duration": string | null,
   "plain_language_explanation": string,
@@ -104,8 +99,6 @@ async function callGoogleAI(prompt: string, _input: AIServiceInput): Promise<AIR
 function buildPrompt(input: AIServiceInput): string {
   return `
 User's symptom description: "${input.originalInput}"
-Detected language: ${input.detectedLanguage}
-Preferred response language: ${input.preferredLanguage}
 Safety system pre-assessment: ${input.safetyLevel}
 ${input.safetyLevel === 'urgent' ? 'IMPORTANT: The safety system has flagged this as URGENT. You MUST set care_urgency to "urgent".' : ''}
 
@@ -118,7 +111,6 @@ Please analyze the symptoms and respond with the JSON schema specified.`
  */
 function getDemoResponse(input: AIServiceInput): AIResponse {
   const text = input.originalInput.toLowerCase()
-  const lang = input.detectedLanguage
   const care_urgency: 'routine' | 'prompt' | 'urgent' =
     input.safetyLevel === 'urgent' ? 'urgent' :
     input.safetyLevel === 'prompt' ? 'prompt' : 'routine'
@@ -127,10 +119,8 @@ function getDemoResponse(input: AIServiceInput): AIResponse {
   const disclaimer = 'This is educational information, not a medical diagnosis.'
 
   // Variant: Hair-related symptoms
-  if (/hair\s*(loss|fall|thinning)|acne|facial\s*hair|hirsutism|ಕೂದಲ|बाल|முடி|జుట్టు|മുടി/.test(text)) {
+  if (/hair\s*(loss|fall|thinning)|acne|facial\s*hair|hirsutism/.test(text)) {
     return {
-      original_language: lang,
-      preferred_language: input.preferredLanguage,
       symptoms_identified: ['Hair thinning or loss', 'Possible excess facial hair', 'Acne'],
       duration: null,
       plain_language_explanation:
@@ -154,10 +144,8 @@ function getDemoResponse(input: AIServiceInput): AIResponse {
   }
 
   // Variant: Fatigue / energy symptoms
-  if (/fatigue|tired|exhausted|no energy|sleep|थकान|ದಣಿವು|சோர்வு|అలసట|ക്ഷീണം/.test(text)) {
+  if (/fatigue|tired|exhausted|no energy|sleep/.test(text)) {
     return {
-      original_language: lang,
-      preferred_language: input.preferredLanguage,
       symptoms_identified: ['Fatigue', 'Low energy', 'Possible sleep disruption'],
       duration: null,
       plain_language_explanation:
@@ -181,10 +169,8 @@ function getDemoResponse(input: AIServiceInput): AIResponse {
   }
 
   // Variant: Weight / metabolic symptoms
-  if (/weight\s*(gain|loss)|obesity|insulin|metabolism|वजन|ತೂಕ|எடை|బరువు|ഭാരം/.test(text)) {
+  if (/weight\s*(gain|loss)|obesity|insulin|metabolism/.test(text)) {
     return {
-      original_language: lang,
-      preferred_language: input.preferredLanguage,
       symptoms_identified: ['Weight changes', 'Possible metabolic changes'],
       duration: null,
       plain_language_explanation:
@@ -207,62 +193,8 @@ function getDemoResponse(input: AIServiceInput): AIResponse {
     }
   }
 
-  // Variant: Kannada input — irregular periods
-  if (lang === 'Kannada' || /ಪಿರಿಯಡ್|ಮುಟ್ಟು/.test(text)) {
-    return {
-      original_language: 'Kannada',
-      preferred_language: input.preferredLanguage,
-      symptoms_identified: ['ಅನಿಯಮಿತ ಮುಟ್ಟು (Irregular periods)'],
-      duration: null,
-      plain_language_explanation:
-        '[DEMO ಮೋಡ್ — ನೈಜ AI ವಿಶ್ಲೇಷಣೆ ಅಲ್ಲ] ' +
-        'ನೀವು ವಿವರಿಸಿದ ಲಕ್ಷಣಗಳು — ಅನಿಯಮಿತ ಮುಟ್ಟು — ಹಲವು ಕಾರಣಗಳಿಂದ ಉಂಟಾಗಬಹುದು. ' +
-        'ಥೈರಾಯ್ಡ್ ಸಮಸ್ಯೆ, ಒತ್ತಡ, ಹಾರ್ಮೋನ್ ಬದಲಾವಣೆ, ಅಥವಾ PCOS ನಂತಹ ಸ್ಥಿತಿಗಳು ಸೇರಿದಂತೆ ಅನೇಕ ಕಾರಣಗಳಿರಬಹುದು. ' +
-        'ನಿಖರವಾದ ಕಾರಣ ತಿಳಿಯಲು ವೈದ್ಯರನ್ನು ಭೇಟಿ ಮಾಡುವುದು ಅವಶ್ಯಕ.',
-      possible_associations: ['ಥೈರಾಯ್ಡ್ ಸಮಸ್ಯೆ', 'ಒತ್ತಡ', 'ಹಾರ್ಮೋನ್ ಅಸಮತೋಲನ', 'PCOS'],
-      pcos_education:
-        'PCOS ಒಂದು ಸಾಮಾನ್ಯ ಹಾರ್ಮೋನ್ ಸ್ಥಿತಿ. ಅನಿಯಮಿತ ಮುಟ್ಟು PCOS ನ ಒಂದು ಸಂಭಾವ್ಯ ಲಕ್ಷಣವಾಗಿರಬಹುದು, ' +
-        'ಆದರೆ ಇದು ಇತರ ಅನೇಕ ಕಾರಣಗಳಿಂದಲೂ ಉಂಟಾಗಬಹುದು. ' +
-        'PCOS ಮೌಲ್ಯಮಾಪನಕ್ಕಾಗಿ ವೈದ್ಯರು ರಕ್ತ ಪರೀಕ್ಷೆ ಮತ್ತು ಅಲ್ಟ್ರಾಸೌಂಡ್ ಮಾಡಿಸಬಹುದು. ' +
-        'ಆದರೆ ಈ ಪರೀಕ್ಷೆಗಳ ಫಲಿತಾಂಶಗಳು ಮಾತ್ರ PCOS ಅನ್ನು ಖಚಿತಗೊಳಿಸಲು ಸಾಕಾಗುವುದಿಲ್ಲ — ವೈದ್ಯಕೀಯ ಮೌಲ್ಯಮಾಪನ ಅಗತ್ಯ.',
-      suggested_tracking: ['ಮುಟ್ಟಿನ ದಿನಾಂಕಗಳು', 'ರಕ್ತಸ್ರಾವದ ಪ್ರಮಾಣ', 'ಇತರ ಲಕ್ಷಣಗಳು'],
-      care_urgency,
-      care_guidance: 'ಮೂರು ತಿಂಗಳಿಗಿಂತ ಹೆಚ್ಚು ಅನಿಯಮಿತ ಮುಟ್ಟು ಇದ್ದರೆ, ವೈದ್ಯರನ್ನು ಭೇಟಿ ಮಾಡಿ. ಯಾವುದೇ ಔಷಧಿ ಬದಲಾಯಿಸಬೇಡಿ.',
-      missing_information: ['ಎಷ್ಟು ತಿಂಗಳಿಂದ ಅನಿಯಮಿತ?', 'ಇತರ ಯಾವ ಲಕ್ಷಣಗಳಿವೆ?', 'ಕುಟುಂಬದಲ್ಲಿ PCOS ಅಥವಾ ಹಾರ್ಮೋನ್ ಸಮಸ್ಯೆ ಇದೆಯೇ?'],
-      disclaimer,
-    }
-  }
-
-  // Variant: Hindi input
-  if (lang === 'Hindi' || /पीरियड|माहवारी/.test(text)) {
-    return {
-      original_language: 'Hindi',
-      preferred_language: input.preferredLanguage,
-      symptoms_identified: ['अनियमित पीरियड्स (Irregular periods)'],
-      duration: null,
-      plain_language_explanation:
-        '[DEMO मोड — असली AI विश्लेषण नहीं] ' +
-        'आपने जो लक्षण बताए हैं — अनियमित पीरियड्स — के कई कारण हो सकते हैं। ' +
-        'थायराइड विकार, तनाव, हार्मोन असंतुलन, या PCOS इनमें से कुछ संभावित कारण हैं। ' +
-        'बिना जाँच के सटीक कारण जानना संभव नहीं है। सही कारण जानने के लिए डॉक्टर से मिलें।',
-      possible_associations: ['थायराइड विकार', 'तनाव', 'हार्मोन असंतुलन', 'PCOS'],
-      pcos_education:
-        'PCOS एक सामान्य हार्मोनल स्थिति है। अनियमित पीरियड्स इसका एक संभावित लक्षण हो सकता है, ' +
-        'लेकिन इसके और भी कारण हो सकते हैं — जैसे थायराइड की समस्या या तनाव। ' +
-        'PCOS के मूल्यांकन के लिए डॉक्टर रक्त परीक्षण और अल्ट्रासाउंड करवा सकते हैं, ' +
-        'लेकिन ये परीक्षण अकेले PCOS का निदान नहीं कर सकते — इसके लिए पूरी चिकित्सीय जाँच आवश्यक है।',
-      suggested_tracking: ['पीरियड्स की तारीखें', 'रक्तस्राव की मात्रा', 'अन्य लक्षण'],
-      care_urgency,
-      care_guidance: '3 महीने से अधिक समय से अनियमित पीरियड्स हों तो डॉक्टर से मिलें। बिना डॉक्टर की सलाह के कोई दवाई न लें।',
-      missing_information: ['कब से अनियमित हैं?', 'कोई अन्य लक्षण हैं?', 'परिवार में PCOS या हार्मोन की समस्या है?'],
-      disclaimer,
-    }
-  }
-
   // Default variant: general / insufficient info / multiple symptoms
   return {
-    original_language: lang,
-    preferred_language: input.preferredLanguage,
     symptoms_identified: ['Reported symptoms (details needed)', 'Possible hormonal or systemic changes'],
     duration: null,
     plain_language_explanation:

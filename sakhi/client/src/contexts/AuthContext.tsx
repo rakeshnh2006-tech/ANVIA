@@ -5,7 +5,6 @@ import { supabase } from '../lib/supabase'
 interface Profile {
   id: string
   display_name: string | null
-  preferred_language: string | null
   age_range: string | null
   has_pcos_diagnosis: boolean | null
   wants_cycle_tracking: boolean | null

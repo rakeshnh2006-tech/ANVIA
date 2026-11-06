@@ -47,10 +47,10 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
 
 export const api = {
   symptom: {
-    analyze: (input: string, preferred_language: string) =>
+    analyze: (input: string) =>
       apiFetch('/symptom/analyze', {
         method: 'POST',
-        body: JSON.stringify({ input, preferred_language }),
+        body: JSON.stringify({ input }),
       }),
     history: () => apiFetch('/symptom/history'),
     deleteHistory: () => apiFetch('/symptom/history', { method: 'DELETE' }),

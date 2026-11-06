@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { format, parseISO } from 'date-fns'
 import {
-  Send, RotateCcw, Sparkles, Globe, ChevronDown, Clock, AlertTriangle, BookOpen, History
+  Send, RotateCcw, Sparkles, Clock, AlertTriangle, BookOpen, History
 } from 'lucide-react'
 import { api } from '../lib/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -10,8 +10,6 @@ import { UrgentSafetyBanner, PromptCareBanner, MedicalDisclaimer } from '../comp
 import { CardSkeleton } from '../components/ui/Skeleton'
 // AI response type (mirrors server schema — kept in sync manually)
 interface AIResponse {
-  original_language: string
-  preferred_language: string
   symptoms_identified: string[]
   duration: string | null
   plain_language_explanation: string
@@ -24,14 +22,10 @@ interface AIResponse {
   disclaimer: string
 }
 
-const LANGUAGES = ['English', 'Kannada', 'Hindi', 'Tamil', 'Telugu', 'Malayalam']
-
 const EXAMPLE_PROMPTS = [
   'My periods have been irregular for the last four months.',
   'I am experiencing acne and unusual facial hair growth.',
   'I feel very tired even after sleeping well.',
-  'ನನಗೆ ಮೂರು ತಿಂಗಳಿಂದ ಸರಿಯಾಗಿ ಪಿರಿಯಡ್ಸ್ ಆಗುತ್ತಿಲ್ಲ.',
-  'मुझे पिछले 3 महीनों से अनियमित पीरियड्स आ रहे हैं।',
   'I have irregular periods and hair fall.',
 ]
 
@@ -51,20 +45,16 @@ interface ConversationEntry {
 interface HistoryEntry {
   id: string
   original_input: string
-  detected_language: string | null
-  preferred_language: string | null
   created_at: string
 }
 
 export default function SymptomUnderstanding() {
   const [input, setInput] = useState('')
-  const [language, setLanguage] = useState('English')
   const [loading, setLoading] = useState(false)
   const [conversations, setConversations] = useState<ConversationEntry[]>([])
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [historyLoading, setHistoryLoading] = useState(true)
   const [showHistory, setShowHistory] = useState(false)
-  const [showLangMenu, setShowLangMenu] = useState(false)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const { profile } = useAuth()
   const { toast } = useToast()
@@ -87,7 +77,7 @@ export default function SymptomUnderstanding() {
 
     setLoading(true)
     try {
-      const result = await api.symptom.analyze(trimmed, language) as AnalysisResult
+      const result = await api.symptom.analyze(trimmed) as AnalysisResult
       const entry: ConversationEntry = {
         id: Math.random().toString(36).slice(2),
         input: trimmed,
@@ -113,7 +103,7 @@ export default function SymptomUnderstanding() {
       <div className="mb-6">
         <h1 className="section-title">Tell Us How You're Feeling</h1>
         <p className="section-subtitle">
-          Describe your symptoms naturally in any supported language.
+          Describe your symptoms in your own words.
           Our AI will provide educational health information.
         </p>
       </div>
@@ -121,34 +111,6 @@ export default function SymptomUnderstanding() {
       {/* Input form */}
       <div className="card mb-6">
         <form onSubmit={handleSubmit}>
-          {/* Language selector */}
-          <div className="relative mb-3">
-            <button
-              type="button"
-              onClick={() => setShowLangMenu(!showLangMenu)}
-              className="flex items-center gap-2 text-sm text-sakhi-muted hover:text-sakhi-text border border-sakhi-border rounded-xl px-3 py-1.5"
-            >
-              <Globe size={14} />
-              {language}
-              <ChevronDown size={14} className={`transition-transform ${showLangMenu ? 'rotate-180' : ''}`} />
-            </button>
-            {showLangMenu && (
-              <div className="absolute top-full left-0 mt-1 bg-white border border-sakhi-border rounded-xl shadow-card-hover z-10 py-1 min-w-[140px]">
-                {LANGUAGES.map(lang => (
-                  <button
-                    key={lang}
-                    type="button"
-                    onClick={() => { setLanguage(lang); setShowLangMenu(false) }}
-                    className={`w-full text-left px-4 py-2 text-sm hover:bg-lavender-50 transition-colors
-                      ${lang === language ? 'text-lavender-700 font-medium' : 'text-sakhi-text'}`}
-                  >
-                    {lang}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
           <textarea
             ref={textareaRef}
             value={input}
@@ -248,9 +210,6 @@ export default function SymptomUnderstanding() {
                     <p className="text-sm text-sakhi-text truncate">{h.original_input}</p>
                     <p className="text-xs text-sakhi-muted mt-0.5">
                       {format(parseISO(h.created_at), 'MMM d, yyyy · h:mm a')}
-                      {h.detected_language && h.detected_language !== 'English' && (
-                        <span className="ml-2 badge-lavender">{h.detected_language}</span>
-                      )}
                     </p>
                   </div>
                   <Clock size={13} className="text-sakhi-muted flex-shrink-0 mt-1" />
@@ -307,15 +266,6 @@ function ConversationResult({ entry }: { entry: ConversationEntry }) {
                 <strong>Demo mode:</strong> This is a sample response, not live AI analysis.
                 Configure AI_PROVIDER and AI_API_KEY for real analysis.
               </p>
-            </div>
-          )}
-
-          {/* Language info */}
-          {ai_response.original_language !== 'English' && (
-            <div className="flex items-center gap-2 text-xs text-sakhi-muted">
-              <Globe size={12} />
-              Detected: <strong>{ai_response.original_language}</strong>
-              · Responding in: <strong>{ai_response.preferred_language}</strong>
             </div>
           )}
 
